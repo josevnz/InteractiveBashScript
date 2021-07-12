@@ -14,7 +14,7 @@ There is a better way to do this?
 
 ## Asking questions, learning how to read
 
-So for our first try, we will write a shell wrapper around freerdp asking for the user, password and remote machine. WIll use Bash [builtin read command](https://wiki.bash-hackers.org/commands/builtin/read):
+So for our first try, [I wrote](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp1.sh) a shell wrapper around freerdp asking for the user, password and remote machine. Will use Bash [builtin read command](https://wiki.bash-hackers.org/commands/builtin/read):
 
 ```shell=
 #!/bin/bash
@@ -44,7 +44,7 @@ But still ... this script keeps asking some questions over an over, there is a w
 
 We could save some of the defaults, like the remote servers, on a configuration file. If we provide none then we use the def
 
-Also on the topic of code reuse: We will put the logic of how to connect to a remote server on a separate file, in case we want to re-use some of this logic in other places like this. So the new library looks like this:
+Also on the topic of code reuse: We will put the logic of how to connect to a remote server on a separate file, in case we want to re-use some of this logic in other places like this. So the [new library](https://github.com/josevnz/InteractiveBashScript/blob/main/rdp_common.sh) looks like this:
 
 ```shell=
 #!/bin/bash
@@ -61,7 +61,7 @@ function remote_rpd {
 }
 ```
 
-And the RDP wrapper is much simpler now:
+And the [RDP wrapper](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp2.sh) is much simpler now:
 ```shell=
 #!/bin/bash
 # author Jose Vicente Nunez
