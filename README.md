@@ -1,4 +1,4 @@
-# Creating an interactive Bash script, using external variables, calling other scripts
+# Creating an interactive Bash script, Using external variables, Calling other scripts
 
 In this article I'll present you some code to show you how you can make an interactive script. Of course a fully interactive script is boring and there are ways to avoid asking questions to we may already have the answers or we can make safe asumptions.
 
@@ -75,6 +75,21 @@ function remote_rpd {
     test -z "$machine" && exit 100
     /usr/bin/xfreerdp /cert-ignore /sound:sys:alsa /f /u:"$remote_user" /v:"${machine}" /p:"(/bin/cat ${pfile})" && return 0|| return 1
 }
+```
+
+So after this change, how does it look like?
+```shell=
+ josevnz  dmaf5  ../InteractiveBashScript  main  ./kodegeek_rdp2.sh
+Remote RPD user: jose
+Password for jose: 
+Remote server: myremotemachine.kodegeek.com
+[20:51:50:492] [52560:52561] [INFO][com.freerdp.core] - freerdp_connect:freerdp_set_last_error_ex resetting error state
+[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx rdpdr
+[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx rdpsnd
+[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx cliprdr
+[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx drdynvc
+[20:51:50:811] [52560:52561] [INFO][com.freerdp.primitives] - primitives autodetect, using optimized
+[20:51:50:894] [52560:52561] [ERROR][com.freerdp.core] - freerdp_tcp_is_hostname_resolvable:freerdp_set_last_error_ex ERRCONNECT_DNS_NAME_NOT_FOUND [0x00020005]
 ```
 
 There is more room for improvement so please keep reading
