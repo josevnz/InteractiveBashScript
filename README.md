@@ -65,16 +65,19 @@ And the RDP wrapper is much simpler now:
 ```shell=
 #!/bin/bash
 # author Jose Vicente Nunez
-# Common logic for RDP connectivity
-function remote_rpd {
-    local remote_user=$1
-    local pfile=$2
-    local machine=$3
-    test -z "$remote_user" && exit 100
-    test ! -f "$pfile" && exit 100
-    test -z "$machine" && exit 100
-    /usr/bin/xfreerdp /cert-ignore /sound:sys:alsa /f /u:"$remote_user" /v:"${machine}" /p:"(/bin/cat ${pfile})" && return 0|| return 1
-}
+# Do not use this script on a public computer.
+# shellcheck source=/dev/null.
+. "rdp_common.sh"
+tmp_file=$(/usr/bin/mktemp 2>/dev/null) || exit 100
+trap '/bin/rm -f $tmp_file' QUIT EXIT INT
+/bin/chmod go-wrx "${tmp_file}" > /dev/null 2>&1
+read -r -p "Remote RPD user: " REMOTE_USER|| exit 100
+read -r -s -p "Password for $REMOTE_USER: " PASSWD|| exit 100
+echo
+echo "$PASSWD" > "$tmp_file"|| exit 100
+read -r -p "Remote server: " MACHINE|| exit 100
+remote_rpd "$REMOTE_USER" "$tmp_file" "$MACHINE"
+
 ```
 
 So after this change, how does it look like?
