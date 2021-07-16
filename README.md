@@ -14,7 +14,7 @@ There is a better way to do this?
 
 ## Asking questions, learning how to read
 
-So for our first try, [I wrote](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp1.sh) a shell wrapper around freerdp asking for the user, password and remote machine. Will use Bash [builtin read command](https://wiki.bash-hackers.org/commands/builtin/read):
+So for our first try, [I wrote (version 1)](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp1.sh) a shell wrapper around freerdp asking for the user, password and remote machine. Will use Bash [builtin read command](https://wiki.bash-hackers.org/commands/builtin/read):
 
 ```shell=
 #!/bin/bash
@@ -61,7 +61,7 @@ function remote_rpd {
 }
 ```
 
-And the [RDP wrapper](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp2.sh) is much simpler now:
+And the [RDP wrapper, version 2 of the original script](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp2.sh) is much simpler now:
 ```shell=
 #!/bin/bash
 # author Jose Vicente Nunez
@@ -99,10 +99,87 @@ There is more room for improvement so please keep reading
 
 ## Always give users a choice: getopt, external variables
 
-Example of external variables and getopt goes here. Also calling other scripts
+So say that you use your script to connect to the same machine every day; chances are that you will not change your remote user, machine and only the password once in a while. So we could save all those settings on a configuration file, readable only by the current user and nobody else:
+
+(Example of ~/.config/scripts/kodegeek_rdp.json)
+```json=
+{
+    "machines": [
+        {
+            "name": "machine1.com",
+            "description": "Personal-PC"
+        },
+        {
+            "name": "vmdesktop1.com",
+            "description": "Virtual-Machine"
+        }
+    ],
+    "remote_user": "jose@MYCOMPANY",
+    "title" : "Remote desktop settings"
+}
+```
+
+Yes, JSON is not the best format for configuration files, but ours is pretty small. Also notice that we can now store more than one remote machine (for simplicity will use only the first one)
+
+To take advantage of it, we will modify our library to look like this:
+
+```shell=
+#!/bin/bash
+# author Jose Vicente Nunez
+# Common logic for RDP connectivity
+if [[ -x '/usr/bin/jq' ]] && [[ -f "$HOME/.config/scripts/kodegeek_rdp.json" ]]; then
+    REMOTE_USER="$(/usr/bin/jq --compact-output --raw-output '.remote_user' "$HOME"/.config/scripts/kodegeek_rdp.json)"|| exit 100
+    MACHINE="$(/usr/bin/jq --compact-output --raw-output '.machines[0]| join(",")' "$HOME"/.config/scripts/kodegeek_rdp.json)"|| exit 100
+    export REMOTE_USER
+    export MACHINE
+fi
+
+
+function remote_rpd {
+    local remote_user=$1
+    local pfile=$2
+    local machine=$3
+    test -z "$remote_user" && exit 100
+    test ! -f "$pfile" && exit 100
+    test -z "$machine" && exit 100
+    /usr/bin/xfreerdp /cert-ignore /sound:sys:alsa /f /u:"$remote_user" /v:"${machine}" /p:"(/bin/cat ${pfile})" && return 0|| return 1
+}
+```
+
+Did you notice I did not try to read the password from a configuration file? That's the only credential I will keep asking over an over unless is encrypted :-). The rest of the values we get using [jq](https://stedolan.github.io/jq/), using a subshell.
+
+And of course a new version ([v3]()) of the script:
+
+```shell=
+#!/bin/bash
+# author Jose Vicente Nunez
+# Do not use this script on a public computer.
+# shellcheck source=/dev/null
+. "rdp_common2.sh" 
+tmp_file=$(/usr/bin/mktemp 2>/dev/null) || exit 100
+trap '/bin/rm -f $tmp_file' QUIT EXIT INT
+/bin/chmod go-wrx "${tmp_file}" > /dev/null 2>&1
+if [ -z "$REMOTE_USER" ]; then
+    read -r -p "Remote RPD user: " REMOTE_USER|| exit 100
+fi
+read -r -s -p "Password for $REMOTE_USER: " PASSWD|| exit 100
+echo
+echo "$PASSWD" > "$tmp_file"|| exit 100
+if [ -z "$MACHINE" ]; then
+    read -r -p "Remote server: " MACHINE|| exit 100
+fi
+remote_rpd "$REMOTE_USER" "$tmp_file" "$MACHINE"
+```
+
+So we do not ask for 2 parameters anymore:
+```shell=
+./kodegeek_rdp2.sh 
+Password for jnunez@STRIKETECH: 
+```
+
+The following part is completely optional, but I'll show you how you can write an interactive script with a nice tool called Dialog.
+
 
 ## But a want a nice text UI: Nothing like a good dialog
 
 Example of Dialog goes here.
-
-
