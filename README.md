@@ -90,7 +90,7 @@ Remote server: myremotemachine.kodegeek.com
 
 There is more room for improvement so please keep reading
 
-## Always give users a choice: getopt, external variables
+## Always give users a choice: external variables and more external programs
 
 So say that you use your script to connect to the same machine every day; chances are that you will not change your remote user, machine and only the password once in a while. So we could save all those settings on a configuration file, readable only by the current user and nobody else:
 
