@@ -86,13 +86,6 @@ So after this change, how does it look like?
 Remote RPD user: jose
 Password for jose: 
 Remote server: myremotemachine.kodegeek.com
-[20:51:50:492] [52560:52561] [INFO][com.freerdp.core] - freerdp_connect:freerdp_set_last_error_ex resetting error state
-[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx rdpdr
-[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx rdpsnd
-[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx cliprdr
-[20:51:50:493] [52560:52561] [INFO][com.freerdp.client.common.cmdline] - loading channelEx drdynvc
-[20:51:50:811] [52560:52561] [INFO][com.freerdp.primitives] - primitives autodetect, using optimized
-[20:51:50:894] [52560:52561] [ERROR][com.freerdp.core] - freerdp_tcp_is_hostname_resolvable:freerdp_set_last_error_ex ERRCONNECT_DNS_NAME_NOT_FOUND [0x00020005]
 ```
 
 There is more room for improvement so please keep reading
@@ -121,7 +114,7 @@ So say that you use your script to connect to the same machine every day; chance
 
 Yes, JSON is not the best format for configuration files, but ours is pretty small. Also notice that we can now store more than one remote machine (for simplicity will use only the first one)
 
-To take advantage of it, we will modify our library to look like this:
+To take advantage of it, we will modify our [library (v2)](https://github.com/josevnz/InteractiveBashScript/blob/main/rdp_common2.sh) to look like this:
 
 ```shell=
 #!/bin/bash
@@ -148,7 +141,7 @@ function remote_rpd {
 
 Did you notice I did not try to read the password from a configuration file? That's the only credential I will keep asking over an over unless is encrypted :-). The rest of the values we get using [jq](https://stedolan.github.io/jq/), using a subshell.
 
-And of course a new version ([v3]()) of the script:
+And of course a new version ([v3](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp2.sh)) of the script:
 
 ```shell=
 #!/bin/bash
@@ -171,13 +164,14 @@ fi
 remote_rpd "$REMOTE_USER" "$tmp_file" "$MACHINE"
 ```
 
-So we do not ask for 2 parameters anymore:
+So we do not ask for 2 parameters anymore, just the password:
 ```shell=
 ./kodegeek_rdp2.sh 
 Password for jnunez@STRIKETECH: 
 ```
 
-The following part is completely optional, but I'll show you how you can write an interactive script with a nice tool called Dialog.
+The following part is completely optional, but I'll show you how you can write an interactive script with a nice tool [called Dialog](https://invisible-island.net/dialog/). I will ask the user to choose between a variable number of machines (depending of the configuration file) and of course the password.
+But if the remote user is the same for both machines (which is normal if you connect to the same company) then we will not ask for it.
 
 
 ## But a want a nice text UI: Nothing like a good dialog
