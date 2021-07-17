@@ -184,7 +184,7 @@ But if the remote user is the same for both machines (which is normal if you con
 
 Note than dialog [is not the only player in town](https://linuxgazette.net/101/sunil.html), I just happen to like it because it is widely available and because its simplicity.
 
-Below is [version 3]() of the script. Its heavily commented, you can see the way Dialog works is either by reading variables or files to enable/ disable options. Give it a shot and run the script to see how each part fits together:
+Below is [version 3](https://github.com/josevnz/InteractiveBashScript/blob/main/kodegeek_rdp3.sh) of the script. Its heavily commented, you can see the way Dialog works is either by reading variables or files to enable/ disable options. Give it a shot and run the script to see how each part fits together:
 
 ```shell=
 #!/bin/bash
