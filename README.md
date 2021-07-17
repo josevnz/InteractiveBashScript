@@ -1,5 +1,9 @@
 # Creating an interactive Bash script, Using external variables, Calling other scripts
 
+
+![An interactive script, using Dialog](https://i.imgur.com/s445Xwb.png)
+
+
 In this article I'll present you some code to show you how you can make an interactive script. Of course a fully interactive script is boring and there are ways to avoid asking questions to we may already have the answers or we can make safe asumptions.
 
 ## Case of study: Connection to a remote server using RPD
@@ -99,11 +103,11 @@ So say that you use your script to connect to the same machine every day; chance
 {
     "machines": [
         {
-            "name": "machine1.com",
+            "name": "myremotemachine.kodegeek.com",
             "description": "Personal-PC"
         },
         {
-            "name": "vmdesktop1.com",
+            "name": "vmdesktop1.kodegeek.com",
             "description": "Virtual-Machine"
         }
     ],
@@ -167,13 +171,146 @@ remote_rpd "$REMOTE_USER" "$tmp_file" "$MACHINE"
 So we do not ask for 2 parameters anymore, just the password:
 ```shell=
 ./kodegeek_rdp2.sh 
-Password for jnunez@STRIKETECH: 
+Password for jose@MYCOMPANY: 
 ```
 
-The following part is completely optional, but I'll show you how you can write an interactive script with a nice tool [called Dialog](https://invisible-island.net/dialog/). I will ask the user to choose between a variable number of machines (depending of the configuration file) and of course the password.
-But if the remote user is the same for both machines (which is normal if you connect to the same company) then we will not ask for it.
+There is anything else you can do to enchance this script?
 
 
 ## But a want a nice text UI: Nothing like a good dialog
 
-Example of Dialog goes here.
+The following part is completely optional, but I'll show you how you can write an interactive script with a nice tool [called Dialog](https://invisible-island.net/dialog/). I will ask the user to choose between a variable number of machines (depending of the configuration file) and of course the password.
+But if the remote user is the same for both machines (which is normal if you connect to the same company) then we will not ask for it.
+
+Note than dialog [is not the only player in town](https://linuxgazette.net/101/sunil.html), I just happen to like it because it is widely available and because its simplicity.
+
+Below is [version 3]() of the script. Its heavily commented, you can see the way Dialog works is either by reading variables or files to enable/ disable options. Give it a shot and run the script to see how each part fits together:
+
+```shell=
+#!/bin/bash
+# author Jose Vicente Nunez
+# Do not use this script on a public computer.
+# https://invisible-island.net/dialog/
+SCRIPT_NAME="$(/usr/bin/basename "$0")"
+DATA_FILE="$HOME/.config/scripts/kodegeek_rdp.json"
+test -f "$DATA_FILE"|| exit 100
+: "${DIALOG_OK=0}"
+: "${DIALOG_CANCEL=1}"
+: "${DIALOG_HELP=2}"
+: "${DIALOG_EXTRA=3}"
+: "${DIALOG_ITEM_HELP=4}"
+: "${DIALOG_ESC=255}"
+tmp_file=$(/usr/bin/mktemp 2>/dev/null) || declare tmp_file=/tmp/test$$
+trap '/bin/rm -f $tmp_file' QUIT EXIT INT
+/bin/chmod go-wrx "${tmp_file}" > /dev/null 2>&1
+
+TITLE=$(/usr/bin/jq --compact-output --raw-output '.title' "$DATA_FILE")|| exit 100
+REMOTE_USER=$(/usr/bin/jq --compact-output --raw-output '.remote_user' "$DATA_FILE")|| exit 100
+
+# Choose a machine
+MACHINES=$(
+    tmp_file2=$(/usr/bin/mktemp 2>/dev/null) || declare tmp_file2=/tmp/test$$
+    /usr/bin/jq --compact-output --raw-output '.machines[]| join(",")' "$DATA_FILE" > $tmp_file2|| exit 100
+    declare -i i=0
+    while read -r line; do
+        machine=$(echo "$line"| /usr/bin/cut -d',' -f1)|| exit 100
+        desc=$(echo "$line"| /usr/bin/cut -d',' -f2)|| exit 100
+        toggle=off
+        if [ $i -eq 0 ]; then
+            toggle=on
+            ((i=i+1))
+        fi
+        echo "$machine" "$desc" "$toggle"
+    done < "$tmp_file2"
+    /bin/cp /dev/null $tmp_file2
+) || exit 100
+# shellcheck disable=SC2086
+/usr/bin/dialog \
+    --clear \
+    --title "$TITLE" \
+    --radiolist "Which machine do you want to use?" 20 61 2 \
+    $MACHINES 2> ${tmp_file}
+return_value=$?
+
+case $return_value in
+  "$DIALOG_OK")
+    remote_machine="$(/bin/cat ${tmp_file})"
+    ;;
+  "$DIALOG_CANCEL")
+    echo "Cancel pressed.";;
+  "$DIALOG_HELP")
+    echo "Help pressed.";;
+  "$DIALOG_EXTRA")
+    echo "Extra button pressed.";;
+  "$DIALOG_ITEM_HELP")
+    echo "Item-help button pressed.";;
+  "$DIALOG_ESC")
+    if test -s $tmp_file ; then
+      /bin/rm -f $tmp_file
+    else
+      echo "ESC pressed."
+    fi
+    ;;
+esac
+
+if [ -z "${remote_machine}" ]; then
+  /usr/bin/dialog \
+  	--clear  \
+	--title "Error, no machine selected?" --clear "$@" \
+       	--msgbox "No machine was selected!. Will exit now..." 15 30
+  exit 100
+fi
+
+# Ask for the password
+/bin/rm -f ${tmp_file}
+/usr/bin/dialog \
+  --title "$TITLE" \
+  --clear  \
+  --insecure \
+  --passwordbox "Please enter your remote password for ${remote_machine}\n" 16 51 2> $tmp_file
+return_value=$?
+passwd=$(/bin/cat ${tmp_file})
+/bin/rm -f "$tmp_file"
+if [ -z "${passwd}" ]; then
+  /usr/bin/dialog \
+  	--clear  \
+	--title "Error, empty password" --clear "$@" \
+       	--msgbox "Empty password!" 15 30
+  exit 100
+fi
+
+# Try to connect
+case $return_value in
+  "$DIALOG_OK")
+    /usr/bin/mkdir -p -v "$HOME"/logs
+    /usr/bin/xfreerdp /cert-ignore /sound:sys:alsa /f /u:"$REMOTE_USER" /v:"${remote_machine}" /p:"${passwd}"| \
+    /usr/bin/tee "$HOME"/logs/"$SCRIPT_NAME"-"$remote_machine".log
+    ;;
+  "$DIALOG_CANCEL")
+    echo "Cancel pressed.";;
+  "$DIALOG_HELP")
+    echo "Help pressed.";;
+  "$DIALOG_EXTRA")
+    echo "Extra button pressed.";;
+  "$DIALOG_ITEM_HELP")
+    echo "Item-help button pressed.";;
+  "$DIALOG_ESC")
+    if test -s $tmp_file ; then
+      /bin/rm -f $tmp_file
+    else
+      echo "ESC pressed."
+    fi
+    ;;
+esac
+```
+
+
+## Let's recap
+
+* You can use Bash built in read to get information from your users
+* You can check if repetitive information is already available to avoid reading them from the environment
+* You don't save passwords without encryption. [KeepPassXC](https://keepassxc.org/) or [Vault](https://www.hashicorp.com/products/vault) are excellent tools you can use to avoid hardcoding sensitive information on the wrong places.
+* You want a nicer UI? You can use [Dialog](https://invisible-island.net/dialog/) and other readily available tools to make it happen
+* Always validate your inputs and check for errors!
+
+
