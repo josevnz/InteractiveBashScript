@@ -1,12 +1,21 @@
-# Creating an interactive Bash script, Using external variables, Calling other scripts
+# Creating an interactive Bash script by using external variables and calling other scripts
 
 
 ![An interactive script, using Dialog](https://i.imgur.com/s445Xwb.png)
 
 
-In this article I'll present you some code to show you how you can make an interactive script. Of course a fully interactive script is boring and there are ways to avoid asking questions to we may already have the answers or we can make safe asumptions.
+> There are times when a script must ask for information that cannot be stored on a configuration file, or when the number of choices will not allow to store every single possibility. Bash is pretty good at making interactive scripts.
 
-## Case of study: Connection to a remote server using RPD
+Ideally by the end of this article you should be able to do the following:
+
+* Write small programs that ask user questions and saves the answers (including sensitive ones, like password)
+* Be able to read data from configuration files by using other programs
+* Allow the script to skip asking questions if external variables are define
+* And as a bonus, how to write a nice UI with text dialogs.
+
+So let's get started with a small script to connec to a remote desktop using the RDP protocol.
+
+## Case study: Connection to a remote server using RPD
 
 On Linux there are many RDP clients and a really good one is [freerdp](https://www.freerdp.com/). One way to call it is to pass a long line of flags (with confusing short names) like this:
 
@@ -179,7 +188,7 @@ There is anything else you can do to enchance this script?
 
 ## But a want a nice text UI: Nothing like a good dialog
 
-The following part is completely optional, but I'll show you how you can write an interactive script with a nice tool [called Dialog](https://invisible-island.net/dialog/). I will ask the user to choose between a variable number of machines (depending of the configuration file) and of course the password.
+Let me show you how you can write an interactive script with a nice tool [called Dialog](https://invisible-island.net/dialog/). I will ask the user to choose between a variable number of machines (depending of the configuration file) and of course the password.
 But if the remote user is the same for both machines (which is normal if you connect to the same company) then we will not ask for it.
 
 Note than dialog [is not the only player in town](https://linuxgazette.net/101/sunil.html), I just happen to like it because it is widely available and because its simplicity.
