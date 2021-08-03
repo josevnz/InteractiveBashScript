@@ -55,7 +55,7 @@ One thing that bothers me is that anyone doing a ```ps -ef``` can see my passwor
 
 But still ... this script keeps asking some questions over an over, there is a way to make it, well smarter?
 
-We could save some of the defaults, like the remote servers, on a configuration file. If we provide none then we use the def
+We could save some of the defaults, like the remote servers, on a configuration file. If we provide none then the script should fail back using the default settings.
 
 Also on the topic of code reuse: We will put the logic of how to connect to a remote server on a separate file, in case we want to re-use some of this logic in other places like this. So the [new library](https://github.com/josevnz/InteractiveBashScript/blob/main/rdp_common.sh) looks like this:
 
@@ -321,5 +321,4 @@ esac
 * You don't save passwords without encryption. [KeepPassXC](https://keepassxc.org/) or [Vault](https://www.hashicorp.com/products/vault) are excellent tools you can use to avoid hardcoding sensitive information on the wrong places.
 * You want a nicer UI? You can use [Dialog](https://invisible-island.net/dialog/) and other readily available tools to make it happen
 * Always validate your inputs and check for errors!
-
 
