@@ -95,7 +95,7 @@ remote_rpd "$REMOTE_USER" "$tmp_file" "$MACHINE"
 
 So after this change, how does it look like?
 ```shell=
- josevnz  dmaf5  ../InteractiveBashScript  main  ./kodegeek_rdp2.sh
+./kodegeek_rdp2.sh
 Remote RPD user: jose
 Password for jose: 
 Remote server: myremotemachine.kodegeek.com
@@ -322,3 +322,4 @@ esac
 * You want a nicer UI? You can use [Dialog](https://invisible-island.net/dialog/) and other readily available tools to make it happen
 * Always validate your inputs and check for errors!
 
+###### tags: `articles`
