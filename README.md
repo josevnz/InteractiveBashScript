@@ -1,5 +1,6 @@
 # Creating an interactive Bash script by using external variables and calling other scripts
 
+![](mazinger-z.png)
 
 ![An interactive script, using Dialog](https://i.imgur.com/s445Xwb.png)
 
